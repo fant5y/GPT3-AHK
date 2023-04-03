@@ -1,17 +1,19 @@
 ﻿; AutoHotkey script that enables you to use GPT3 in any input field on your computer
 
 ; -- Configuration --
-#SingleInstance  ; Allow only one instance of this script to be running.
+#SingleInstance ; Allow only one instance of this script to be running.
+
+#NoEnv ; Recommended for performance and compatibility with future AutoHotkey releases.
 
 ; This is the hotkey used to autocomplete prompts
-HOTKEY_AUTOCOMPLETE = #o  ; Win+o
+HOTKEY_AUTOCOMPLETE = #o ; Win+o
 ; This is the hotkey used to edit prompts
-HOTKEY_INSTRUCT = #+o  ; Win+shift+o
+HOTKEY_INSTRUCT = #+o ; Win+shift+o
 ; Models settings
-MODEL_AUTOCOMPLETE_ID := "gpt-3.5-turbo" 
+MODEL_AUTOCOMPLETE_ID := "gpt-3.5-turbo"
 MODEL_AUTOCOMPLETE_MAX_TOKENS := 200
 MODEL_AUTOCOMPLETE_TEMP := 0.8
-MODEL_INSTRUCT_ID := "text-davinci-edit-001" 
+MODEL_INSTRUCT_ID := "text-davinci-edit-001"
 
 ; -- Initialization --
 ; Dependencies
@@ -22,26 +24,27 @@ http := WinHttpRequest()
 
 I_Icon = GPT3-AHK.ico
 IfExist, %I_Icon%
-Menu, Tray, Icon, %I_Icon%
+   Menu, Tray, Icon, %I_Icon%
 
 Hotkey, %HOTKEY_AUTOCOMPLETE%, AutocompleteFcn
 Hotkey, %HOTKEY_INSTRUCT%, InstructFcn
 OnExit("ExitFunc")
 
-IfNotExist, settings.ini     
+Try
 {
-  InputBox, API_KEY, Please insert your OpenAI API key, API key, , 270, 145
-  IniWrite, %API_KEY%, settings.ini, OpenAI, API_KEY
-} 
-Else
+   EnvGet, OPENAI_API_KEY, OPENAI_API_KEY
+   IniWrite, %OPENAI_API_KEY%, settings.ini, OpenAI, API_KEY
+}
+Catch
 {
-  IniRead, API_KEY, settings.ini, OpenAI, API_KEY  
+   InputBox, API_KEY, Please insert your OpenAI API key, API_KEY, , 270, 145
+   IniWrite, %API_KEY%, settings.ini, OpenAI, API_KEY
 }
 Return
 
 ; -- Main commands --
 ; Edit the phrase
-InstructFcn: 
+InstructFcn:
    GetText(CutText, "Cut")
    InputBox, UserInput, Text to edit "%CutText%", Enter an instruction, , 270, 145
    if ErrorLevel {
@@ -59,24 +62,24 @@ InstructFcn:
       PutText(obj.choices[1].text, "")
       RestoreCursors()
    }
-   Return   
+Return
 
-; Auto-complete the phrase 
+; Auto-complete the phrase
 AutocompleteFcn:
    GetText(CopiedText, "Copy")
    url := "https://api.openai.com/v1/chat/completions"
    body := {}
-   body.model := MODEL_AUTOCOMPLETE_ID ; ID of the model to use.   
-   body.messages := [{"role": "user", "content": CopiedText}] ; The prompt to generate completions for
+   body.model := MODEL_AUTOCOMPLETE_ID ; ID of the model to use.
+   body.messages := [{"role":"system", "content": "You are a friendly, hepful AI. Answer in the language the user prompt is written in. If it's German, answer in Du-Form."},{"role": "user", "content": CopiedText}] ; The prompt to generate completions for
    body.max_tokens := MODEL_AUTOCOMPLETE_MAX_TOKENS ; The maximum number of tokens to generate in the completion.
-   body.temperature := MODEL_AUTOCOMPLETE_TEMP + 0 ; Sampling temperature to use 
+   body.temperature := MODEL_AUTOCOMPLETE_TEMP + 0 ; Sampling temperature to use
    headers := {"Content-Type": "application/json", "Authorization": "Bearer " . API_KEY}
    SetSystemCursor()
    response := http.POST(url, JSON.Dump(body), headers, {Object:true, Encoding:"UTF-8"})
    obj := JSON.Load(response.Text)
    PutText(obj.choices[1].message.content, "AddSpace")
-   RestoreCursors()   
-   Return
+   RestoreCursors()
+Return
 
 ; -- Auxiliar functions --
 ; Copies the selected text to a variable while preserving the clipboard.
@@ -108,8 +111,8 @@ GetText(ByRef MyText = "", Option = "Copy")
 PutText(MyText, Option = "")
 {
    ; Save clipboard and paste MyText
-   SavedClip := ClipboardAll 
-   Clipboard = 
+   SavedClip := ClipboardAll
+   Clipboard =
    Sleep 20
    Clipboard := MyText
    If (Option == "AddSpace")
@@ -121,9 +124,9 @@ PutText(MyText, Option = "")
    Sleep 100
    Clipboard := SavedClip
    Return
-}   
+}
 
-; Change system cursor 
+; Change system cursor
 SetSystemCursor()
 {
    Cursor = %A_ScriptDir%\GPT3-AHK.ani
@@ -136,15 +139,15 @@ SetSystemCursor()
    }
 }
 
-RestoreCursors() 
+RestoreCursors()
 {
    DllCall( "SystemParametersInfo", UInt, 0x57, UInt,0, UInt,0, UInt,0 )
 }
 
 ExitFunc(ExitReason, ExitCode)
 {
-    if ExitReason not in Logoff,Shutdown
-    {
-        RestoreCursors()
-    }
+   if ExitReason not in Logoff,Shutdown
+   {
+      RestoreCursors()
+   }
 }
