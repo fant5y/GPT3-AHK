@@ -11,7 +11,7 @@ HOTKEY_AUTOCOMPLETE = #o ; Win+o
 HOTKEY_INSTRUCT = #+o ; Win+shift+o
 ; Models settings
 MODEL_AUTOCOMPLETE_ID := "gpt-3.5-turbo"
-MODEL_AUTOCOMPLETE_MAX_TOKENS := 200
+MODEL_AUTOCOMPLETE_MAX_TOKENS := 800
 MODEL_AUTOCOMPLETE_TEMP := 0.8
 MODEL_INSTRUCT_ID := "gpt-3.5-turbo"
 
@@ -46,22 +46,44 @@ Return
 
 ; -- Main commands --
 ; Edit the phrase
+;InstructFcn:
+;   GetText(CutText, "Cut")
+;   InputBox, UserInput, Text to edit "%CutText%", Enter an instruction, , 270, 145
+;   if ErrorLevel {
+;      PutText(CutText)
+;   }else{
+;      url := "https://api.openai.com/v1/edits"
+;      body := {}
+;      body.model := MODEL_INSTRUCT_ID ; ID of the model to use.
+;      body.input := CutText ; The prompt to edit.
+;      body.instruction := UserInput ; The instruction that tells how to edit the prompt
+;      headers := {"Content-Type": "application/json", "Authorization": "Bearer " . API_KEY}
+;      SetSystemCursor()
+;      response := http.POST(url, JSON.Dump(body), headers, {Object:true, Encoding:"UTF-8"})
+;      obj := JSON.Load(response.Text)
+;      PutText(obj.choices[1].text, "")
+;      RestoreCursors()
+;   }
+;Return
+
+; -- Main commands --
+; Edit the phrase
 InstructFcn:
    GetText(CutText, "Cut")
    InputBox, UserInput, Text to edit "%CutText%", Enter an instruction, , 270, 145
    if ErrorLevel {
       PutText(CutText)
    }else{
-      url := "https://api.openai.com/v1/edits"
+      url := "https://api.openai.com/v1/chat/completions"
       body := {}
       body.model := MODEL_INSTRUCT_ID ; ID of the model to use.
       body.input := CutText ; The prompt to edit.
-      body.instruction := UserInput ; The instruction that tells how to edit the prompt
+      body.instruction := [{"role":"system", "content": "You are a helpful text editor AI. You've got over 20 years of editing all kinds of languages and all kinds of text. Here is what I need you to do for me:"},{"role": "user", "content": UserInput}] ; The instruction that tells how to edit the prompt
       headers := {"Content-Type": "application/json", "Authorization": "Bearer " . API_KEY}
       SetSystemCursor()
       response := http.POST(url, JSON.Dump(body), headers, {Object:true, Encoding:"UTF-8"})
       obj := JSON.Load(response.Text)
-      PutText(obj.choices[1].text, "")
+      PutText(obj.choices[1].message.content, "")
       RestoreCursors()
    }
 Return
