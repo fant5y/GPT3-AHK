@@ -77,8 +77,8 @@ InstructFcn:
       url := "https://api.openai.com/v1/chat/completions"
       body := {}
       body.model := MODEL_INSTRUCT_ID ; ID of the model to use.
-      body.input := CutText ; The prompt to edit.
-      body.instruction := [{"role":"system", "content": "You are a helpful text editor AI. You've got over 20 years of editing all kinds of languages and all kinds of text. Here is what I need you to do for me:"},{"role": "user", "content": UserInput}] ; The instruction that tells how to edit the prompt
+      body.input := ; The prompt to edit.
+      body.messages := [{"role":"system", "content": "You are a helpful text editor AI. You've got over 20 years of editing all kinds of languages and all kinds of text. Here is what I need you to do for me:" UserInput},{"role": "user", "content": CutText}] ; The instruction that tells how to edit the prompt
       headers := {"Content-Type": "application/json", "Authorization": "Bearer " . API_KEY}
       SetSystemCursor()
       response := http.POST(url, JSON.Dump(body), headers, {Object:true, Encoding:"UTF-8"})
