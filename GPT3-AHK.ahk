@@ -13,7 +13,7 @@ HOTKEY_INSTRUCT = #+o ; Win+shift+o
 MODEL_AUTOCOMPLETE_ID := "gpt-3.5-turbo"
 MODEL_AUTOCOMPLETE_MAX_TOKENS := 200
 MODEL_AUTOCOMPLETE_TEMP := 0.8
-MODEL_INSTRUCT_ID := "text-davinci-edit-001"
+MODEL_INSTRUCT_ID := "gpt-3.5-turbo"
 
 ; -- Initialization --
 ; Dependencies
@@ -33,15 +33,13 @@ OnExit("ExitFunc")
 Try
 {
    EnvGet, OPENAI_API_KEY, OPENAI_API_KEY
-   IniWrite, %OPENAI_API_KEY%, settings.ini, OpenAI, API_KEY
+   ; IniWrite, %OPENAI_API_KEY%, settings.ini, OpenAI, API_KEY
+   API_KEY := OPENAI_API_KEY
 }
 Catch
 {
    InputBox, API_KEY, Please insert your OpenAI API key, API_KEY, , 270, 145
    IniWrite, %API_KEY%, settings.ini, OpenAI, API_KEY
-}
-
-{
    IniRead, API_KEY, settings.ini, OpenAI, API_KEY
 }
 Return
