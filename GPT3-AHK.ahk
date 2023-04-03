@@ -11,7 +11,7 @@ HOTKEY_AUTOCOMPLETE = #o ; Win+o
 HOTKEY_INSTRUCT = #+o ; Win+shift+o
 ; Models settings
 MODEL_AUTOCOMPLETE_ID := "gpt-3.5-turbo"
-MODEL_AUTOCOMPLETE_MAX_TOKENS := 800
+MODEL_AUTOCOMPLETE_MAX_TOKENS := 2048
 MODEL_AUTOCOMPLETE_TEMP := 0.8
 MODEL_INSTRUCT_ID := "gpt-3.5-turbo"
 
@@ -46,30 +46,15 @@ Return
 
 ; -- Main commands --
 ; Edit the phrase
-;InstructFcn:
-;   GetText(CutText, "Cut")
-;   InputBox, UserInput, Text to edit "%CutText%", Enter an instruction, , 270, 145
-;   if ErrorLevel {
-;      PutText(CutText)
-;   }else{
-;      url := "https://api.openai.com/v1/edits"
-;      body := {}
-;      body.model := MODEL_INSTRUCT_ID ; ID of the model to use.
-;      body.input := CutText ; The prompt to edit.
-;      body.instruction := UserInput ; The instruction that tells how to edit the prompt
-;      headers := {"Content-Type": "application/json", "Authorization": "Bearer " . API_KEY}
-;      SetSystemCursor()
-;      response := http.POST(url, JSON.Dump(body), headers, {Object:true, Encoding:"UTF-8"})
-;      obj := JSON.Load(response.Text)
-;      PutText(obj.choices[1].text, "")
-;      RestoreCursors()
-;   }
-;Return
-
-; -- Main commands --
-; Edit the phrase
 InstructFcn:
-   GetText(CutText, "Cut")
+   ; a message box that ask the user if he wants to replace the edited text or keep it. If replace, set method to: Cut, if keep, set method to: AddSpace
+   SetTimer, ChangeButtonNamesVar, 50
+   MsgBox, 36, Keep or Replace?, Do you want to keep or replace the highlighted text?`n`nKeep: The edited text will be added after the highlighted text.`nReplace: The highlighted text will be replaced by the edited text.
+   if IfMsgBox, Yes
+      method := "AddSpace"
+   else
+      method := "Cut"
+   GetText(CutText, method)
    InputBox, UserInput, Text to edit "%CutText%", Enter an instruction, , 270, 145
    if ErrorLevel {
       PutText(CutText)
@@ -77,7 +62,7 @@ InstructFcn:
       url := "https://api.openai.com/v1/chat/completions"
       body := {}
       body.model := MODEL_INSTRUCT_ID ; ID of the model to use.
-      body.input := ; The prompt to edit.
+      ; body.input := ; The prompt to edit.
       body.messages := [{"role":"system", "content": "You are a helpful text editor AI. You've got over 20 years of editing all kinds of languages and all kinds of text. Here is what I need you to do for me:" UserInput},{"role": "user", "content": CutText}] ; The instruction that tells how to edit the prompt
       headers := {"Content-Type": "application/json", "Authorization": "Bearer " . API_KEY}
       SetSystemCursor()
@@ -106,6 +91,16 @@ AutocompleteFcn:
 Return
 
 ; -- Auxiliar functions --
+; Change Button names of the message box for the "Keep or Replace?" question
+ChangeButtonNamesVar:
+   IfWinNotExist, Keep or Replace?
+      Return ; Keep waiting
+   SetTimer, ChangeButtonNamesVar, Off
+   WinActivate,
+   ControlSetText, Button1, Keep, Keep or Replace?
+   ControlSetText, Button2, Replace, Keep or Replace?
+Return
+
 ; Copies the selected text to a variable while preserving the clipboard.
 GetText(ByRef MyText = "", Option = "Copy")
 {
