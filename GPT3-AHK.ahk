@@ -40,6 +40,10 @@ Catch
    InputBox, API_KEY, Please insert your OpenAI API key, API_KEY, , 270, 145
    IniWrite, %API_KEY%, settings.ini, OpenAI, API_KEY
 }
+
+{
+   IniRead, API_KEY, settings.ini, OpenAI, API_KEY
+}
 Return
 
 ; -- Main commands --
