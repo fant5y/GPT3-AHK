@@ -47,7 +47,6 @@ Return
 ; -- Main commands --
 ; Edit the phrase
 InstructFcn:
-
    ; a message box that ask the user if he wants to replace the edited text or keep it. If replace, set method to: Cut, if keep, set method to: AddSpace
    SetTimer, ChangeButtonNamesVar, 50
    MsgBox, 36, Keep or Replace?, Do you want to keep or replace the highlighted text?`n`nKeep: The edited text will be added after the highlighted text.`nReplace: The highlighted text will be replaced by the edited text.
