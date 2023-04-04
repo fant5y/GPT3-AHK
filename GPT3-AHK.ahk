@@ -5,16 +5,6 @@
 
 #NoEnv ; Recommended for performance and compatibility with future AutoHotkey releases.
 
-; This is the hotkey used to autocomplete prompts
-HOTKEY_AUTOCOMPLETE = #o ; Win+o
-; This is the hotkey used to edit prompts
-HOTKEY_INSTRUCT = #+o ; Win+shift+o
-; Models settings
-MODEL_AUTOCOMPLETE_ID := "gpt-3.5-turbo"
-MODEL_AUTOCOMPLETE_MAX_TOKENS := 2048
-MODEL_AUTOCOMPLETE_TEMP := 0.8
-MODEL_INSTRUCT_ID := "gpt-3.5-turbo"
-
 ; -- Initialization --
 ; Dependencies
 ; WinHttpRequest: https://www.reddit.com/comments/mcjj4s
@@ -26,15 +16,19 @@ I_Icon = GPT3-AHK.ico
 IfExist, %I_Icon%
    Menu, Tray, Icon, %I_Icon%
 
-Hotkey, %HOTKEY_AUTOCOMPLETE%, AutocompleteFcn
-Hotkey, %HOTKEY_INSTRUCT%, InstructFcn
-OnExit("ExitFunc")
+; This is the hotkey used to autocomplete prompts
+HOTKEY_AUTOCOMPLETE = #o ; Win+o
+; This is the hotkey used to edit prompts
+HOTKEY_INSTRUCT = #+o ; Win+shift+o
+; Models settings
+MODEL_AUTOCOMPLETE_ID := "gpt-3.5-turbo"
+MODEL_AUTOCOMPLETE_MAX_TOKENS := 2048
+MODEL_AUTOCOMPLETE_TEMP := 0.8
+MODEL_INSTRUCT_ID := "gpt-3.5-turbo"
 
 Try
 {
-   EnvGet, OPENAI_API_KEY, OPENAI_API_KEY
-   ; IniWrite, %OPENAI_API_KEY%, settings.ini, OpenAI, API_KEY
-   API_KEY := OPENAI_API_KEY
+   EnvGet, API_KEY, OPENAI_API_KEY
 }
 Catch
 {
@@ -42,6 +36,26 @@ Catch
    IniWrite, %API_KEY%, settings.ini, OpenAI, API_KEY
    IniRead, API_KEY, settings.ini, OpenAI, API_KEY
 }
+
+; Add your GPTNOTES folder as an environment variable. This way GPT-3-AHK can save completions and instructions to a file. Alternatively, you can set the  variable GPTNOTES in the settings.ini file.
+
+Try
+{
+   EnvGet, NOTES, GPTNOTES
+}
+Catch
+{
+   InputBox, NOTES, Please insert the full path to your NOTES folder, NOTES, , 270, 145
+   IniWrite, %NOTES%, settings.ini, NOTES, NOTES
+   IniRead, NOTES, settings.ini, NOTES, NOTES
+}
+
+notes_file = %NOTES%\%A_YYYY%-%A_MM%-%A_DD%_GPTresponses.md
+
+Hotkey, %HOTKEY_AUTOCOMPLETE%, AutocompleteFcn
+Hotkey, %HOTKEY_INSTRUCT%, InstructFcn
+OnExit("ExitFunc")
+
 Return
 
 ; -- Main commands --
@@ -70,7 +84,12 @@ InstructFcn:
       SetSystemCursor()
       response := http.POST(url, JSON.Dump(body), headers, {Object:true, Encoding:"UTF-8"})
       obj := JSON.Load(response.Text)
-      PutText(obj.choices[1].message.content, "")
+      PutText(obj.choices[1].message.content , "")
+      response := obj.choices[1].message.content
+      FileAppend, ## %A_Hour%:%A_Min% GPT Response`n`n,%notes_file%, UTF-8-RAW
+      FileAppend, **Instruct:**`n%UserInput%`n `n, %notes_file%, UTF-8-RAW
+      FileAppend, **Text:**`n%CutText%`n `n, %notes_file%, UTF-8-RAW
+      FileAppend, **Response:**`n%response%`n `n, %notes_file%, UTF-8-RAW
       RestoreCursors()
    }
 Return
@@ -89,6 +108,11 @@ AutocompleteFcn:
    response := http.POST(url, JSON.Dump(body), headers, {Object:true, Encoding:"UTF-8"})
    obj := JSON.Load(response.Text)
    PutText(obj.choices[1].message.content, "AddSpace")
+   response := obj.choices[1].message.content
+   FileAppend, ## %A_Hour%:%A_Min% GPT Response`n`n,%notes_file%, UTF-8-RAW
+   FileAppend, **Text:**`n%CopiedText%`n `n, %notes_file%, UTF-8-RAW
+   FileAppend, **Completion:**`n%response%`n `n, %notes_file%, UTF-8-RAW
+
    RestoreCursors()
 Return
 
@@ -136,6 +160,7 @@ PutText(MyText, Option = "")
    Clipboard =
    Sleep 20
    Clipboard := MyText
+
    If (Option == "AddSpace")
    {
       Send {Right}
