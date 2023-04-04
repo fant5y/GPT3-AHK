@@ -63,7 +63,7 @@ InstructFcn:
       body := {}
       body.model := MODEL_INSTRUCT_ID ; ID of the model to use.
       ; body.input := ; The prompt to edit.
-      body.messages := [{"role":"system", "content": "You are a helpful text editor AI. You've got over 20 years of editing all kinds of languages and all kinds of text. Here is what I need you to do for me:" UserInput},{"role": "user", "content": CutText}] ; The instruction that tells how to edit the prompt
+      body.messages := [{"role":"system", "content": "You are a helpful text editor AI. You've got over 20 years of editing and writing all kinds of text. If you write German, use the Du-Form. Here is what I need you to do for me:" UserInput},{"role": "user", "content": CutText}] ; The instruction that tells how to edit the prompt
       headers := {"Content-Type": "application/json", "Authorization": "Bearer " . API_KEY}
       SetSystemCursor()
       response := http.POST(url, JSON.Dump(body), headers, {Object:true, Encoding:"UTF-8"})
