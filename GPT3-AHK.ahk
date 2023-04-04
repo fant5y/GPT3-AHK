@@ -47,6 +47,7 @@ Return
 ; -- Main commands --
 ; Edit the phrase
 InstructFcn:
+
    ; a message box that ask the user if he wants to replace the edited text or keep it. If replace, set method to: Cut, if keep, set method to: AddSpace
    SetTimer, ChangeButtonNamesVar, 50
    MsgBox, 36, Keep or Replace?, Do you want to keep or replace the highlighted text?`n`nKeep: The edited text will be added after the highlighted text.`nReplace: The highlighted text will be replaced by the edited text.
@@ -64,6 +65,8 @@ InstructFcn:
       body.model := MODEL_INSTRUCT_ID ; ID of the model to use.
       ; body.input := ; The prompt to edit.
       body.messages := [{"role":"system", "content": "You are a helpful text editor AI. You've got over 20 years of editing and writing all kinds of text. If you write German, use the Du-Form. Here is what I need you to do for me:" UserInput},{"role": "user", "content": CutText}] ; The instruction that tells how to edit the prompt
+      body.max_tokens := MODEL_AUTOCOMPLETE_MAX_TOKENS ; The maximum number of tokens to generate in the completion.
+      body.temperature := MODEL_AUTOCOMPLETE_TEMP - 0.3 ; Sampling temperature to use
       headers := {"Content-Type": "application/json", "Authorization": "Bearer " . API_KEY}
       SetSystemCursor()
       response := http.POST(url, JSON.Dump(body), headers, {Object:true, Encoding:"UTF-8"})
