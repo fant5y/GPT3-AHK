@@ -105,7 +105,7 @@ AutocompleteFcn:
    url := "https://api.openai.com/v1/chat/completions"
    body := {}
    body.model := MODEL_AUTOCOMPLETE_ID ; ID of the model to use.
-   body.messages := [{"role":"system", "content": "You are a friendly, hepful AI. Answer in the language the user prompt is written in. If it's German, answer in Du-Form."},{"role": "user", "content": CopiedText}] ; The prompt to generate completions for
+   body.messages := [{"role":"system", "content": "You are a friendly, hepful AI. Answer in the language the user prompt is written in. If it's German, write in Du-Form. Complete the following sentence or text:"},{"role": "user", "content": CopiedText}] ; The prompt to generate completions for
    body.max_tokens := MODEL_AUTOCOMPLETE_MAX_TOKENS ; The maximum number of tokens to generate in the completion.
    body.temperature := MODEL_AUTOCOMPLETE_TEMP + 0 ; Sampling temperature to use
    headers := {"Content-Type": "application/json", "Authorization": "Bearer " . API_KEY}
